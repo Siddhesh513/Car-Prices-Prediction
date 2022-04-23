@@ -1,0 +1,526 @@
+import pandas as pd 
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.preprocessing import OneHotEncoder, StandardScaler, MinMaxScaler 
+from sklearn.model_selection import GridSearchCV, train_test_split, KFold, cross_val_score
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_squared_error, accuracy_score, mean_absolute_error, mean_squared_error
+from sklearn.ensemble import GradientBoostingRegressor
+from sklearn.neural_network import MLPRegressor
+from sklearn.svm import SVR
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.cross_decomposition import PLSRegression
+from sklearn.tree import DecisionTreeRegressor
+import missingno as msno
+from sklearn.utils import shuffle 
+from category_encoders import TargetEncoder, OneHotEncoder
+import warnings
+warnings.filterwarnings("ignore")
+sns.set(rc = {'figure.figsize': (20, 20)})
+%matplotlib inline 
+
+data = pd.read_csv('data/data.csv')
+
+data.shape
+
+data.head()
+
+## 2.1 Countplot 
+
+Countplots are used with the help of seaborn library in python. These plots give us a good understanding of the total number of elements present in a particular feature that we have considered. Below are a list of countplots for different features of interest which would help in understanding the overall distribution of data based on different features. Therefore, taking a look at these plots would ensure that one is familiar with the data along with the total number of classes for different features respectively. 
+
+## 2.1.1 Countplot of different car companies
+
+We would be using seaborn's countplot to check the total number of cars per company that we have in our dataset. We see that there are more than 1000 cars for the company 'Chevrolet' in our dataset. We also see that there just a few cars for companies such as 'Bugatti' and 'Genesis' which is reflective of the real-world as we don't find different models of these cars. A countplot could really give us a good understanding of the data that we are working. 
+
+plt.figure(figsize = (20, 15))
+sns.countplot(y = data.Make)
+plt.title("Car companies with their cars", fontsize = 20)
+plt.show()
+
+## 2.1.2 Countplot of the total cars per different years
+
+We would be checking the total number of cars per year just to understand the data. We find that there are many cars in the years 2015 to 2017 compared to the other years in our dataset. From this visualization, we can get an understanding that most of our data contains recent values. This is a good dataset as we are more interested in the prices of the future cars. It would be better if we have the most recent values as they would help us well in our predictions. 
+
+plt.figure(figsize = (20, 15))
+sns.countplot(data.Year, palette = 'viridis')
+plt.title("Number of cars in different years", fontsize = 20)
+plt.show()
+
+## 2.1.3 Counting the cars based on transmission type
+
+We are all interested in cars that are automatic as they are really easy to handle and efficient. In addition to this, most of the manual cars are being replaced by automatic cars and thus, we don't have a lot of demand for manual cars. That is being reflected here in the dataset. We see that when we see the total number of cars based on transmission type, we find that there are many automatic cars as compared to the cars that are manual. There are a few automatic_manual cars that is second option for the buyer of the cars. Thus, we could see that most of the cars that we have chosen in our dataset are automatic. 
+
+plt.figure(figsize = (10, 10))
+sns.countplot(data['Transmission Type'], palette = 'Paired')
+plt.title("Transmission Type", fontsize = 20)
+plt.show()
+
+## Getting the unique elements from the data
+
+We see from the below that there are a few categories for features such as 'Number of Doors', 'Vehicle Size', 'Driven_Wheels' and so on. That is what is expected as we should not have a lot of categories for the above mentioned features. In addition to this, we see that there are a few features that contain a lot of categories. Some of the features include 'Model', 'Engine HP' and so on. That is also what is expected in real life as we should have different models for cars and also different values of horsepower (hp).
+
+data.nunique()
+
+data.head()
+
+## 2.1.4 Countplot of Engine Fuel Type
+
+We would be counting the total number of values for 'Engine Fuel Type' feature. We see that there are more than a majority of cars that have 'regular unleaded' as their category. Apart from this, there are other categories such as 'premium unleaded (required)' and 'premium unleaded (recommended)' which could also be taken into consideration. Moreover, we have a few few cars that are electric in our data. That is what is expectd as in real-life, we don't find a lot of electric cars (hope they replace our conventional cars leading to safer environment! Just kidding). 
+
+plt.figure(figsize = (15, 10))
+sns.countplot(y = data['Engine Fuel Type'].sort_values(ascending = False), palette = 'Dark2')
+
+## 2.1.5 Countplot of Vehicle Size 
+
+There are mostly compact cars in our data followed by Midsize cars. There are just a few cars that are large compared to compact and midsize cars. This is typical of the real world data as we don't have a lot of cars that are large. We see a lot of cars to be compact and midsize in real life too! Great we are doing a good job selecting this data. 
+
+plt.figure(figsize = (10, 10))
+sns.countplot(x = 'Vehicle Size', data = data, palette = 'Set1')
+
+## 2.2 Missingno
+
+We would be making the use of Missingno library from python. It is a very good graphical representation of missing values in our data. We see that there are many missing values in 'Market Category' feature. There are also a few missing values in 'Engine HP', 'Engine Cylinders' and 'Number of Doors' respectively. This library could be used to plot the missing values present in our data even when there is a huge data present. Therefore, we could use this library for understanding the missing values in our data.  
+
+msno.matrix(data, color = (0.5, 0.5, 0.5))
+
+## 2.3 Groupby 
+
+Groupby is a good useful function in python where the values are grouped based on feature (or) features that we give to the groupby function and things such as mean, median, mode or other aggregate functions could be performed once the data values are grouped together. Below are some of the plots which are made possible with the help of groupy function in python. For demonstration, I have created a groupby table below which shows the grouping of cars based on their make. In addition to this, there are various features that I have taken after grouping the values which are "Engine HP", "Engine Cylinders", "highway MPG" and "city mpg" features respectively. 
+
+## 2.3.1 Groupby with 'Make' feature
+
+We would be making use of groupby which would take into consideration the feature that would be grouped on and it would perform different operations after grouping such as finding the minimum element in particular group, maximum element in a particular group and so on. Therefore, we would be making use of this in groupby as it makes life simple in python. Here, we see that we have grouped the data on the basis of 'Make' and considered a few features such as 'Engine HP', 'Engine Cylinders', 'highway MPG' and 'city mpg'. We would be then looking at the maximum values, minimum values and mean of the data. We could see a very good depiction of the result below. 
+
+data.groupby('Make')[['Engine HP', 'Engine Cylinders', 'highway MPG', 'city mpg']].agg(['min', 'max', 'mean'])
+
+## 2.3.2 Grouping the data on the basis of Year
+
+We would now be grouping the data on the basis of year and check the average prices of cars for the years of cars. Looking at the plot below, we see that the average prices of cars was the highest in the year 2014 followed by the year 2012. The average prices of cars that are in the year 2000 and below are pretty low as can be easily seen from the plot. On average, we also find an interesting trend. As the years increase, we could see that the average prices of cars keep increasing but not in a steady way. 
+
+plt.figure(figsize = (20, 10))
+data.groupby('Year')['MSRP'].mean().plot(kind = 'bar', color = 'g')
+plt.title("The Average Price of cars in different years", fontsize = 20)
+plt.show()
+
+
+## 2.3.3 Grouping on the basis of Transmission Type
+
+We would be grouping the data on the basis of transmission type and check the average prices of cars. We see that automated_manual cars have the highest average price. That is being followed by automatic cars. We expect the prices of cars that are manual to be low compared to the prices of cars that are automatic. That is being reflected in the graph below. 
+
+plt.figure(figsize = (10, 10))
+data.groupby('Transmission Type')['MSRP'].mean().plot(kind = 'bar', color = 'y')
+plt.title("The Average Price of cars in different tranmission types", fontsize = 20)
+plt.show()
+
+
+## 2.3.4 Grouping on the basis of Make with 'MSRP' values
+
+We would now be grouping on the basis of make and check the average prices of cars of particular makes. We should surely be expecting Bugatti to the most expensive car. In fact, it is the most expensive car in the world. Hope we buy the car anytime soon! (Just kidding). We see that the average price of Bugatti Veyron is about 1.75 million dollars. It is way too expensive compared to the other cars. There are other cars such as Maybach and Rolce-Royce that are also expensive if we remove Bugatti from our list. We see that the least expensive car is Plymouth. 
+
+plt.figure(figsize = (20, 15))
+data.groupby(['Make']).mean()['MSRP'].sort_values(ascending = False).plot(kind = 'bar', fontsize = 15, color = 'black')
+plt.title("The average price of cars of different companies", fontsize = 20)
+plt.show()
+
+
+## 2.3.5 Grouping on the basis of Make with 'Engine HP' values 
+
+We would be grouping the data on the basis of Make and consider the 'Engine HP'. We should expect Bugatti to have the highest horse power (hp). We see that in the below graph. In addition, there are other car makers such as McLaren and Maybach which also contain a good horse power (hp). Since the horse power of 'tesla' is not known, we don't have a bar depicted below. 
+
+plt.figure(figsize = (20, 20))
+data.groupby('Make').median()['Engine HP'].plot(kind = 'barh', fontsize = 15, color = 'brown')
+
+## 2.3.6 Grouping on the basis of Driven Wheels
+
+We would now be dividing the data on the basis of Driven Wheels. We would then calculate the average prices of each group. We see that the average price of 'all wheel drive' cars is the highest followed by 'rear wheel drive' cars respectively. That is what should be expected as 'all wheel drive' cars are powerful and their cost is high. The 'front wheel drive' cars on the other hand are not that expensive as they don't have a lot of power. Thus, the data is reflective of the real-world data. 
+
+plt.figure(figsize = (15, 5))
+data.groupby('Driven_Wheels').mean()['MSRP'].plot(kind = 'barh', color = 'olivedrab')
+plt.title("The average cost of cars based on the driven wheels", fontsize= 20)
+plt.show()
+
+## 2.3.7 Grouping on the basis of Make with 'Popularity' values
+
+We would group the data on the basis of make and find the average popularity of different cars. We see that 'Ford' is very popular all around our data. It is being followed by 'BMW' and 'Audi' respectively. We see that there are other car makers such as 'Lincoln' and 'Genesis' that are not so popular. 'Toyota' is also a popular brand and is present in the plot below.  
+
+plt.figure(figsize = (15, 15))
+data.groupby('Make').mean()['Popularity'].sort_values(ascending = True).plot(kind = 'barh', color = 'orange')
+plt.yticks(fontsize = 10)
+plt.title("Popularity of various car brands", fontsize = 15)
+plt.show()
+
+## 2.4 Scatterplot between 'highway MPG' and 'city mpg'
+
+We should be expecting a linear relationship between 'highway MPG' and 'city mpg' as they are very much correlated with each other. We cannot have cars, in general, that have a city mileage that is very much different from highway mileage. In the plot below, we see that there is one outlier where the highway MPG is about 350. There are no cars that have that high mileage. We can remove the outlier as it would affect our results as errors in the data are costly when performing the machine learning operations. 
+
+sns.scatterplot(x = 'highway MPG', y = 'city mpg', data = data, color = 'r')
+plt.title("Scatterplot between highway MPG and city mpg")
+plt.show()
+
+We would be removing the outlier in our data where the highway MPG is about 350.
+
+data[data['highway MPG'] > 350]
+
+data = data[data['highway MPG'] < 350]
+
+We would now be using a scatterplot as the above but with removing the outliers. We see almost a linear line between the two features that we have considered and that is what is expected.
+
+sns.scatterplot(x = 'highway MPG', y ='city mpg', data = data, color = 'salmon')
+plt.title("Scatterplot between highway MPG and city mpg")
+plt.show()
+
+We would check all the unique values in 'Market Category'. We see that there are so many different unique values. 
+
+data['Market Category'].unique()
+
+## 2.5 Boxplot 
+
+Boxplots give us a good understanding of how the data values are spread for different features. We could get to know the 25th, 50th and 75th percentile values present in different features. In addition, the outliers could also be detected by making use of a formula and considering the interquartile range which is the difference between the 75th percentile and 25th percentile respectively.
+
+## 2.5.1 Boxplot of highway MPG
+
+We would now be using the boxplot of highway MPG and calculate the average values and how the distribution is spread. We see that the average values are about 25 for highway MPG and we see the maximum value being equal to about 40 and the points above that to be outliers. We see that the data is not so spread as most of the values lie between 21 and 30 respectively. 
+
+sns.boxplot(x = 'highway MPG', data = data, color = 'red')
+
+## Calculating percentiles of highway MPG
+
+We would now print the highway percentile values to get a better understanding of the outliers in our data. We see that we cannot distinguish the outliers in the below print statements. We would be using more granularity and then calculate the percentile values and spot the outliers in our data. 
+
+for i in range(90, 100):
+    print("The {:.1f}th percentile value is {:.2f}".format(i, np.percentile(data['highway MPG'], i)))
+
+We see that 99.5th percentile values and so on have very high values and can be considered as outliers. Therefore, we have to remove those outliers so that they don't disturb our data and machine learning algorithms perform well with the data once the outliers are removed. 
+
+for i in [x * 0.1 for x in range(990, 1000)]:
+    print("The {:.1f}th percentile value is {:.2f}".format(i, np.percentile(data['highway MPG'], i)))
+
+We would be removing the outlier values in our data. We would set the bar to be equal to about 60 respectively.
+
+data = data[data['highway MPG'] < 60]
+
+We would once again plot the boxplot and see how the values are split for highway MPG. We find that the highway MPG is more skewed towards the right. We see a lot of values to the right of the mean. What this means is that more than 50 percent of the values are above 24 (mean). 
+
+sns.boxplot(x = 'highway MPG', data = data, color = 'skyblue')
+
+## 2.5.2 Boxplot of city mpg
+We would do the similar above operation for 'city mpg' respectively. We also see below some outliers that might interfere in our predictions. Therefore, we would delete those values. 
+
+
+sns.boxplot(x = 'city mpg', data = data)
+
+We would now be getting the percentile values and check the outliers. 
+
+for i in range(90, 100):
+    print("The {:.1f}th percentile value is {:.2f}".format(i, np.percentile(data['city mpg'], i)))
+
+We would be checking the outliers and calculate their values. 
+
+for i in [x * 0.1 for x in range(990, 1000)]:
+    print("The {:.1f}th percentile value is {:.2f}".format(i, np.percentile(data['city mpg'], i)))
+
+We would be removing the outlier values and put the bar equal to 40 respectively. 
+
+data = data[data['city mpg'] < 40]
+
+We would once again plot the boxplot of 'city mpg' respectively. We see again that the data is right skewed. 
+
+sns.boxplot(x = 'city mpg', data= data, color = 'darkgreen')
+
+## 2.5.3 Boxplot of 2 features 'city mpg' and 'highway MPG' 
+
+We would be looking at the 2 features 'city mpg' and 'highway MPG' respectively. We see that in terms of 'city mpg' most of the values that are present are in the range between 15 to 22 respectively. On the other hand, we find that most of the values that are present in 'highway MPG' are in the range 22 to 30 respectively. Therefore, we can see how the values are spread in the boxplot and see there the spread actually take place by comparing the features. 
+
+plt.figure(figsize = (20, 10))
+sns.boxplot(data = data[['city mpg', 'highway MPG']], palette = 'Accent')
+plt.title("Boxplot of city mpg and highway MPG", fontsize = 15)
+plt.show()
+
+## 2.5.4 Boxplot of 'Engine HP' 
+
+We would be making use of the boxplot and then seeing the spread of the values 'Engine HP' and get an idea about how the values are spread. We see that most of the values of 'Engine HP' would lie between 150 to 300 respectively. The maximum value of the engine horsepower would be something like 500 while the remaining values that are higher are considered to be outliers. The boxplot also looks as though it is right skewed where there are more number of values of 'Engine HP' that are higher than the mean value of about 250 (mean) respectively. 
+
+plt.figure(figsize = (20, 10))
+sns.boxplot(data['Engine HP'])
+
+## 2.6.1 lmplot between 'Engine HP' and 'Popularity'
+
+We would be using lmplot and checking the relationship between 'Engine HP' and 'Popularity' respectively. We see that most of the data is not related. One thing to note, however, is that there is a linear line which has a positive slope. What this means is that with the increase in 'Engine HP', there is a higher chance of increase in 'Popularity' respectively. This need not be true in all the cases as correlation need not always be equal to causation. 
+
+sns.set(rc = {'figure.figsize': (20, 20)})
+sns.lmplot(x = 'Engine HP', y = 'Popularity', data = data)
+
+## 2.6.2 lmplot between 'Engine Cylinders' and 'Popularity' 
+
+We would now be plotting the lmplot between 'Engine Cylinders' and 'Popularity' and see if there is any relationships between the parameters taken into consideration. We see that there is a relationship between the 'Popularity' and 'Engine Cylinders' and there is a positive relationship between parameters. We see that the data and the features that we have considered are correlated with each other. But that should again not be confused with causation as having higher number of 'Engine Cylinders' does not cause the car to be more popular and increase the 'Popularity'. 
+
+sns.lmplot(x = 'Engine Cylinders', y = 'Popularity', data = data)
+plt.title("Engine Cylinders vs Popularity", fontsize = 15)
+plt.show()
+
+## 2.6.3 lmplot between 'Number of Doors' and 'Popularity'
+We see that there is a line that has a negative slope on the relationship between the parameters. We see that 'Popularity' and the 'Number of Doors' are not related with each other. In general, we see that the more the number of doors of the car, the less the popularity. That is true in real life as well as we see that the cars that are highly popular have just 2 doors. Some of the cars include Bugatti Veyron and Lamborghini Gallardo. Thus, this data is reflective of the real world data set that we have taken into consideration. 
+
+sns.lmplot(x = 'Number of Doors', y = 'Popularity', data = data)
+plt.title("Number of doors vs Popularity", fontsize = 15)
+plt.show()
+
+## 2.6.4 lmplot between 'Engine Cylinders' and 'Engine HP' 
+
+We see that there is a very good correlation between 'Engine Cylinders' and 'Engine HP' as can be seen from the plot below. That's the reason we gave an almost perfect linearly drawn line. Therefore, lmplot could be used to see the linear relationship or the correlation between the 2 features under consideration respectively. 
+
+sns.lmplot(x = 'Engine Cylinders', y = 'Engine HP', scatter_kws = {"s": 40, "alpha": 0.2}, data = data)
+plt.title("Engine Cylinders vs Engine HP", fontsize = 15)
+plt.show()
+
+## 2.6.5 lmplot between 'city mpg' and 'highway MPG'
+
+We see that there is a linear relationship between features that we have taken into consideration. In real life, we see the same being reflected. Therefore, we are working with a real world data set as most of the features are what we find in the real-world. 
+
+sns.lmplot(x = 'city mpg', y = 'highway MPG', data = data)
+plt.title("city mpg vs highway MPG", fontsize = 15)
+plt.show()
+
+## 2.6.6 lmplot between 'city mpg' and 'Engine Cylinders'
+
+We see that there is an inverse relationship between 'city mpg' and 'Engine Cylinders' respectively. That is what we typically find in real-life. We see that as there is an increase in the number of engine cylinders, there is a higher possibility for the car under consideration to be lower in terms of city mileage. That is what is being reflected in our plot. 
+
+sns.lmplot(x = 'city mpg', y = 'Engine Cylinders', data = data)
+plt.title("city mpg vs Engine Cylinders", fontsize = 15)
+plt.show()
+
+## 2.7 Heatmap
+
+One of the cool features of python is the heatmap. We would be able to consider some of the important values that are present such as 'Engine HP', 'Engine Cylinders' and 'Number of Doors'. We would be taking the features that are numerical and we would be using the plots and see the correlation between them. We see that 'highway MPG' and 'city mpg' are highly correlated. That is the reason that we got a value of about 0.94 respectively. In addition to this, we see that 'Engine Horsepower' and 'Engine Cylinders' are correlated. That is true as having a higher number of cylinders would ensure that there is a high horsepower on a car. 
+
+plt.figure(figsize = (15, 15))
+numeric_columns = ['Engine HP', 'Engine Cylinders', 'Number of Doors', 'highway MPG', 'city mpg', 'Popularity']
+heatmap_data = data[numeric_columns].corr()
+
+sns.heatmap(heatmap_data, cmap = 'BuPu', annot = True)
+
+## 2.8 Grouping on the basis of 'Year'
+
+We would now be grouping on the basis of the year and check the 'highway MPG' in descending order so that we can know which year there was a good 'highway MPG' and so on. We see from the plot that in the year 2016, there is a higher value of 'highway MPG' respectively. We cannot easily seperate the values on the basis of year as there are so many years to be taken into consideration respectively. We were able to separate the average prices of the car on the basis of the year as we found that there are some cars of the years below 2000 that were considered to be low. Here, we cannot find such cases as there are cars even in the 90's that had high values of 'highway MPG' respectively. 
+
+plt.figure(figsize = (20, 10))
+data.groupby('Year').mean()['highway MPG'].sort_values(ascending = False).plot(kind = 'bar', color = 'darkseagreen')
+plt.title("Average highway mpg for different years", fontsize = 15)
+plt.show()
+
+## Checking the NULL values
+
+Now, it is time to check the null values and see if there are any missing data values. We see that there are a few features that have missing values. We see some features such as 'Engine Fuel Type' and 'Engine HP' that are missing. We have to fill those missing values as our machine learning model cannot deal with missing values though there are some algorithms that can solve the problem. 
+
+data.isnull().sum()
+
+We would be calculating the median values of 'Number of doors' so that we can fill the missing values with the median value. 
+
+data['Number of Doors'].median()
+
+Here, we would be filling the missing values with the value 4 which is the median of the number of doors. 
+
+data['Number of Doors'].fillna(4.0, inplace = True)
+
+We would now be checking the missing values of 'Number of doors' and see if there are any values present. We see that there are 0 missing values present. 
+
+data['Number of Doors'].isnull().sum()
+
+## Creating a new column
+
+We would now try to add a new feature which is used to calculate the difference between the present year and the year of manufacture of the car so that we can take into consideration the depreciation amount which can be done by the machine learning models. Therefore, we create a new column called 'Present Year' and we make it equal to 2021 respectively. We would then subtract the 'Year of manufacture' values with these values of the car so that we get the total number of years the car has been out. 
+
+data['Present Year'] = 2021
+
+We would be printing the head of the dataframe just to check the values that are present in it.
+
+data.head()
+
+Now it is the time to create a new column called 'Years of Manufacture' respectively. We would be doing the subtraction of the 'Present Year' from the 'Year' which is nothing but the year of manufacture. It would be better to plot the graph and see how the graph looks like in the notebook.
+
+data['Years Of Manufacture'] = data['Present Year'] - data['Year']
+
+Once we have the information, there is no need to have an additional column called 'Present Year' as that value is a constant. We would, therefore, delete the column as it is no longer needed. 
+
+data.drop(['Present Year'], inplace = True, axis = 1)
+
+## 2.9 Plotting the barplot of 'Years of Manufacture' 
+
+We see that most of the values are about 6 years old. Therefore, we are working with young cars as there are some other cars in our data that are about 31 years old. These cars are very few in number. It is good to work with the most recent data points as the future would also be more relying and would be following the trend of the most recent data points into consideration. 
+
+sns.barplot(y = data['Years Of Manufacture'].value_counts(), x = data['Years Of Manufacture'].value_counts().index)
+plt.title("Total number of cars with particular years of manufacture", fontsize = 20)
+plt.show()
+
+## Unique values in 'Engine Fuel Type'
+
+We see that there are a few values that are present in 'Engine Fuel Types' and we would be taking those values into consideration respectively.
+
+data['Engine Fuel Type'].unique()
+
+type("data['Engine Fuel Type'].mode()")
+
+data['Engine Fuel Type'].fillna("data['Engine Fuel Type'].mode()", inplace = True)
+
+data['Engine Fuel Type'].isnull().sum()
+
+data.isnull().sum()
+
+We would now be calculating the mean value of 'Engine HP' and understand it better. As could be seen from the graph, the 'Engine HP' is about 250 as can also be seen below. 
+
+data['Engine HP'].mean()
+
+We would now be checking the median values of 'Engine HP' and understand them better. We see that the value is about '230' respectively which is nothing but the median value. 
+
+data['Engine HP'].median()
+
+We are now going to fill the missing values with the median value so that it is more appropriate and accurate. And we have to make sure that inplace = True which means that the values that are replaced are permanent rather than getting temporary solutions in a variable. 
+
+data['Engine HP'].fillna(data['Engine HP'].median(), inplace = True)
+
+We now check the missing values in 'Engine HP' and see if there are any values present. We see that there are no mssing values that are present in 'Engine HP' respectively. 
+
+data['Engine HP'].isnull().sum()
+
+It is good to know the values that are present in 'Engine Cylinders' and see if there is any replacement. We see that there is an 'nan' value present in our data. We have to remove that point and replace it with some other value as missing values in machine learning could be costly and lead to some errors. Moreover, some machine learning algorithms cannot perform well too if there are any missing values. 
+
+data['Engine Cylinders'].unique()
+
+data['Engine Cylinders'].fillna(4, inplace = True)
+
+We would once again check the missing values and see if there are values present in our features. We see that there is one feature with missing values namely 'Market Category' respectively. We would be removing that feature as there are many missing values and it seems as though we cannot make use of this feature anyways as it contains complex texts. Note that we might have used some natural language processing techniques (NLP) to solve the problem. However, it is not feasible here as the text is too complex and cannot find much of a value in it. 
+
+data.isnull().sum()
+
+Below we are dropping the 'Market Category' feature and making the inplace = True which shows that the feature is removed. 
+
+data.drop(['Market Category'], inplace = True, axis = 1)
+
+We once again check the missing values and see if there are any missing values in our data. We see that there are no missing values in our features. Therefore, now is the time to convert all these features into a mathematical format so that we would be able to perform the machine learning operations. 
+
+data.isnull().sum()
+
+We would see the information about the data and consider the type of feature that we are going to be dealing in machine learning respectively. We find that there are a few object features which must be converted to a mathematical form for the machine learning algorithm to read and understand them. 
+
+data.info()
+
+We would find the unique values of 'Vehicle Size' and see the values that are associated with them. We see just 3 categorical features such as 'Compact', 'Midsize' and 'Large' respectively. 
+
+data['Vehicle Size'].unique()
+
+We would also see the vehicle style and the categories that are associated with them. We see a lot of categories and we would have to be working with them and understand and convert them into the form of integers before working with them. 
+
+data['Vehicle Style'].unique()
+
+# 3. Manipulation of Data 
+
+Now, it is time to manipulate the data and convert it in the forms where we could give it for the machine learning models for predictions. We use various libraries in python such as shuffle that are used to choose various data values that would later be given to the machine learning models. There is a requirement to also encode the text information that is present so that those values are converted to mathematical vectors that would ensure that they would be understood by the algorithms respectively. 
+
+## 3.1 Shuffling the data
+
+Most of the machine learning projects that I've seen do not make use of shuffle feature in python. It is very important to shuffle the data randomly so that we get outputs differently and we would be dealing with data without any particular order or a particular timeframe. 
+
+shuffled_data = shuffle(data, random_state = 100)
+X = shuffled_data.drop(['MSRP'], axis = 1)
+y = shuffled_data['MSRP']
+
+## 3.2 Dividing the data into training and testing set
+
+We would be dividing the data into training data and testing data. Since we have a lot of data points, it would be better to randomly divide the data so that the test set just contains 20 percent of the values. Since the total number of data points that we have taken into consideration are about 10000, it would be wise to divide the training and testing set in the ratio 80:20 percent. In general, we would be diving the training and testing set so that the value that is present in the training set is about 30 percent of the total data. 
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.2, random_state = 100)
+
+We would be printing the format of the data and see how the values are divided. We see that the total number of rows on the training set are about 9364 respectively. We also see that the total number of rows on the test set are about 2341 respectively. These values can be seen here. 
+
+print("The size of the input train data is: {}".format(X_train.shape))
+print("The size of the output train data is: {}".format(y_train.shape))
+print("The size of the input test data is: {}".format(X_test.shape))
+print("The size of the output test data is: {}".format(y_test.shape))
+
+## 3.3 Encoding the data
+
+When we are doing any machine learning applications, it is important to encode the data so that we would be able to convert the data in the form of categorical features so that we would be working on the data that is mathematical rather than categorical. Therefore, we would be converting the categorical feature into numerical features so that we are going to be using the mathematical vectors for our machine learning applications. 
+
+There are different encoding techniques that we would be taking into consideration and we are making sure that we get the best output values associated with each of them. You can check out the link below to see the different encoding techniques to convert the cateogrical values into numerical features respectively. 
+
+https://www.analyticsvidhya.com/blog/2020/08/types-of-categorical-data-encoding/
+
+encoder = TargetEncoder(cols = 'Year')
+
+X_train.head()
+
+We would be doing the target encoding here where we would replace the values with the average values of the 'MSRP' whenever we find a value associated with it. This would make it easier for the machine learning model as we are already giving the output values to it so that there is no need to encode further. 
+
+encoder.fit(X_train['Year'], y_train.to_frame()['MSRP'] )
+
+
+We would be transforming the value so that we are now converting the column so that we get the most desired output respectively. 
+
+X_train['Year'] = encoder.transform(X_train['Year'])
+
+
+We should also make sure that the values that we have taken into consideration and transforming should be with respect to the training set. We should not replace those values with the test output as it would lead to data leakage respectively. 
+
+X_test['Year'] = encoder.transform(X_test['Year'])
+
+X_train.head()
+
+We would be doing the same set of steps for other models and we would be taking those values into consideration from our data set. 
+
+encoder = TargetEncoder(cols = 'Model')
+encoder.fit(X_train['Model'], y_train.to_frame()['MSRP'])
+X_train['Model'] = encoder.transform(X_train['Model'])
+X_test['Model'] = encoder.transform(X_test['Model'])
+
+
+X_train.head()
+
+Same operation is being performed here as well as can be seen below. 
+
+encoder = TargetEncoder(cols = 'Make')
+encoder.fit(X_train['Make'], y_train.to_frame()['MSRP'])
+X_train['Make'] = encoder.transform(X_train['Make'])
+X_test['Make'] = encoder.transform(X_test['Make'])
+
+X_train["Engine Fuel Type"].unique()
+
+X_train.head()
+
+## 3.4 One Hot Encoding 
+
+Now we would be making use of the one hot encoding. One hot encoding is a technique where each category in a feature is converted into a feature and set to 1 once the particular value is present in the data. 
+
+encoder = OneHotEncoder()
+encoder.fit(X_train[['Engine Fuel Type', 'Transmission Type', 'Driven_Wheels', 'Vehicle Size', 'Vehicle Style']])
+one_hot_encoded_output_train = encoder.transform(X_train[['Engine Fuel Type', 'Transmission Type', 'Driven_Wheels', 'Vehicle Size', 'Vehicle Style']])
+one_hot_encoded_output_test = encoder.transform(X_test[['Engine Fuel Type', 'Transmission Type', 'Driven_Wheels', 'Vehicle Size', 'Vehicle Style']])
+
+We would concatenate the features with the X_train and X_test and remove the actual categorical features as they should not be given to the machine learning algorithms respectively. 
+
+X_train = pd.concat([X_train, one_hot_encoded_output_train], axis = 1)
+X_test = pd.concat([X_test, one_hot_encoded_output_test], axis = 1)
+
+X_train.drop(['Engine Fuel Type', 'Transmission Type', 'Driven_Wheels', 'Vehicle Size', 'Vehicle Style'], axis = 1, inplace = True)
+X_test.drop(['Engine Fuel Type', 'Transmission Type', 'Driven_Wheels', 'Vehicle Size', 'Vehicle Style'], axis = 1, inplace = True)
+
+We would check the info of the data and see the values that are present in the data. We see that there are only float and int values rather than objects. We see that we can give this to the machine learning algorithm for implementation. 
+
+X_train.info()
+
+## 3.5 Standardization and Normalization of data
+
+We would be considering the values of our data and perform some operations such as standardization and normalization before giving the data to the machine learning algorithms. We would be transforming the features that are present in the data and convert the values using the minmaxscaler respectively. 
+
+scaler = MinMaxScaler()
+scaler.fit(X_train)
+X_train_new = scaler.transform(X_train)
+X_test_new = scaler.transform(X_test)
+
+X_train_new.shape
+
+We would create an empty list and we would be appending the values later so that we can analyze different machine learning algorithms for deployment. 
+
+error_mean_square = []
+error_mean_absolute = []
